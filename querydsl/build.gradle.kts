@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "1.5.21"
     kotlin("plugin.spring") version "1.5.21"
     kotlin("plugin.jpa") version "1.5.21"
+    kotlin("kapt") version "1.5.30"
 }
 
 group = "study"
@@ -24,6 +25,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     runtimeOnly("com.h2database:h2")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    implementation("com.querydsl:querydsl-jpa")
+    kapt("com.querydsl:querydsl-apt:4.2.2:jpa")
+    annotationProcessor(group = "com.querydsl", name = "querydsl-apt", classifier = "jpa")
 }
 
 tasks.withType<KotlinCompile> {
