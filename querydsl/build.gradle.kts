@@ -28,6 +28,7 @@ dependencies {
     implementation("com.querydsl:querydsl-jpa")
     kapt("com.querydsl:querydsl-apt:4.2.2:jpa")
     annotationProcessor(group = "com.querydsl", name = "querydsl-apt", classifier = "jpa")
+    implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.5.8")
 }
 
 tasks.withType<KotlinCompile> {
