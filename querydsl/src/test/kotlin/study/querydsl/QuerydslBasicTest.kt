@@ -1,14 +1,14 @@
 package study.querydsl
 
 import com.querydsl.jpa.impl.JPAQueryFactory
-import org.assertj.core.api.Assertions.*
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
 import study.querydsl.entity.Member
-import study.querydsl.entity.QMember
+import study.querydsl.entity.QMember.member
 import study.querydsl.entity.Team
 import javax.persistence.EntityManager
 
@@ -48,11 +48,10 @@ class QuerydslBasicTest(
 
     @Test
     fun startQuerydsl() {
-        val m = QMember("m")
         val findMember = queryFactory
-            .select(m)
-            .from(m)
-            .where(m.username.eq("member1"))
+            .select(member)
+            .from(member)
+            .where(member.username.eq("member1"))
             .fetchOne()
 
         assertThat(findMember?.username).isEqualTo("member1")
