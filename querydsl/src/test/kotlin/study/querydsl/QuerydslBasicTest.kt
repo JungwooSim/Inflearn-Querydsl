@@ -56,4 +56,28 @@ class QuerydslBasicTest(
 
         assertThat(findMember?.username).isEqualTo("member1")
     }
+
+    @Test
+    fun search() {
+        val findMember = queryFactory
+            .selectFrom(member)
+            .where(member.username.eq("member1")
+                .and(member.age.between(10, 30)))
+            .fetchOne();
+
+        assertThat(findMember?.username).isEqualTo("member1")
+    }
+
+    @Test
+    fun searchAndParam() {
+        val findMember = queryFactory
+            .selectFrom(member)
+            .where(
+                member.username.eq("member1"),
+                member.age.between(10, 30)
+            )
+            .fetchOne();
+
+        assertThat(findMember?.username).isEqualTo("member1")
+    }
 }
