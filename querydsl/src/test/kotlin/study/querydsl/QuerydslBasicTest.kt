@@ -130,6 +130,12 @@ class QuerydslBasicTest(
             .fetchCount()
     }
 
+    /**
+     *회원 정렬 순서
+     * 1. 회원 나이 내림차순(desc)
+     * 2. 회원 이름 올림차순(asc)
+     * 단 2에서 회원 이름이 없으면 마지막에 출력(nulls last)
+     */
     @Test
     fun sort() {
         val teamA = Team(name = "teamA")
@@ -152,5 +158,32 @@ class QuerydslBasicTest(
         assertThat(member5.username).isEqualTo("member5")
         assertThat(member6.username).isEqualTo("member6")
         assertThat(memberNull.username).isNull()
+    }
+
+    @Test
+    fun paging1() {
+        val result: MutableList<Member> = queryFactory
+            .selectFrom(member)
+            .orderBy(member.username.desc())
+            .offset(1)
+            .limit(2)
+            .fetch()
+
+        assertThat(result.size).isEqualTo(2)
+    }
+
+    @Test
+    fun paging2() {
+        val result: QueryResults<Member> = queryFactory
+            .selectFrom(member)
+            .orderBy(member.username.desc())
+            .offset(1)
+            .limit(2)
+            .fetchResults()
+
+        assertThat(result.total).isEqualTo(4)
+        assertThat(result.limit).isEqualTo(2)
+        assertThat(result.offset).isEqualTo(1)
+        assertThat(result.results.size).isEqualTo(2)
     }
 }
