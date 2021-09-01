@@ -1,5 +1,6 @@
 package study.querydsl
 
+import com.querydsl.core.QueryResults
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -79,5 +80,31 @@ class QuerydslBasicTest(
             .fetchOne();
 
         assertThat(findMember?.username).isEqualTo("member1")
+    }
+
+    @Test
+    fun resultFetch() {
+        val fetch: MutableList<Member> = queryFactory
+            .selectFrom(member)
+            .fetch()
+
+        val fetchOne: Member? = queryFactory
+            .selectFrom(member)
+            .fetchOne()
+
+        val fetchFirst: Member = queryFactory
+            .selectFrom(member)
+            .fetchFirst()
+
+        val results: QueryResults<Member> = queryFactory
+            .selectFrom(member)
+            .fetchResults()
+
+        results.total
+        val content: MutableList<Member> = results.results
+
+        val total: Long = queryFactory
+            .selectFrom(member)
+            .fetchCount()
     }
 }
