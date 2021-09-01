@@ -7,7 +7,7 @@ class Member (
     @Id @GeneratedValue
     @Column(name = "member_id")
     val id: Long? = null,
-    val username: String,
+    val username: String? = null,
     val age: Int? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)

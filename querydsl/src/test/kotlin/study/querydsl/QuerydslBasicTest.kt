@@ -66,6 +66,23 @@ class QuerydslBasicTest(
                 .and(member.age.between(10, 30)))
             .fetchOne();
 
+        /*
+            member.username.eq("member1") // username = 'member1'
+            member.username.ne("member1") //username != 'member1'
+            member.username.eq("member1").not() // username != 'member1'
+            member.username.isNotNull() //이름이 is not null
+            member.age.in(10, 20) // age in (10,20)
+            member.age.notIn(10, 20) // age not in (10, 20)
+            member.age.between(10,30) //between 10, 30
+            member.age.goe(30) // age >= 30
+            member.age.gt(30) // age > 30
+            member.age.loe(30) // age <= 30
+            member.age.lt(30) // age < 30
+            member.username.like("member%") //like 검색
+            member.username.contains("member") // like ‘%member%’ 검색
+            member.username.startsWith("member") //like ‘member%’ 검색
+         */
+
         assertThat(findMember?.username).isEqualTo("member1")
     }
 
@@ -84,18 +101,22 @@ class QuerydslBasicTest(
 
     @Test
     fun resultFetch() {
+        //List
         val fetch: MutableList<Member> = queryFactory
             .selectFrom(member)
             .fetch()
 
-        val fetchOne: Member? = queryFactory
-            .selectFrom(member)
-            .fetchOne()
+        //단 건
+//        val fetchOne: Member? = queryFactory
+//            .selectFrom(member)
+//            .fetchOne()
 
+        //처음 한 건 조회
         val fetchFirst: Member = queryFactory
             .selectFrom(member)
             .fetchFirst()
 
+        //페이징에서 사용
         val results: QueryResults<Member> = queryFactory
             .selectFrom(member)
             .fetchResults()
@@ -103,8 +124,33 @@ class QuerydslBasicTest(
         results.total
         val content: MutableList<Member> = results.results
 
+        //count 쿼리
         val total: Long = queryFactory
             .selectFrom(member)
             .fetchCount()
+    }
+
+    @Test
+    fun sort() {
+        val teamA = Team(name = "teamA")
+        em.persist(teamA)
+
+        em.persist(Member(username = null, age = 100, team = teamA))
+        em.persist(Member(username = "member5", age = 100, team = teamA))
+        em.persist(Member(username = "member6", age = 100, team = teamA))
+
+        val result: MutableList<Member> = queryFactory
+            .selectFrom(member)
+            .where(member.age.eq(100))
+            .orderBy(member.age.desc(), member.username.asc().nullsLast())
+            .fetch()
+
+        val member5 = result[0]
+        val member6 = result[1]
+        val memberNull = result[2]
+
+        assertThat(member5.username).isEqualTo("member5")
+        assertThat(member6.username).isEqualTo("member6")
+        assertThat(memberNull.username).isNull()
     }
 }
