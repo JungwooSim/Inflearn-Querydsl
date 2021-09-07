@@ -686,5 +686,48 @@ class QuerydslBasicTest(
         return usernameEq(usernameParam)?.and(ageEQ(ageParam))
     }
 
+    /**
+     * 벌크 수정
+     */
+    @Test
+    fun bulkUpdate() {
+        val count: Long = queryFactory
+            .update(member)
+            .set(member.username, "비회원")
+            .where(member.age.lt(28))
+            .execute()
 
+        em.flush()
+        em.clear()
+
+        val result = queryFactory
+            .selectFrom(member)
+            .fetch()
+
+        for (value in result) {
+            println("member = $value")
+        }
+    }
+
+    /**
+     * 벌크 더하기
+     */
+    @Test
+    fun bulkAdd() {
+        val count: Long = queryFactory
+            .update(member)
+            .set(member.age, member.age.add(1))
+            .execute()
+    }
+
+    /**
+     * 벌크 삭제
+     */
+    @Test
+    fun bulkDelete() {
+        val count = queryFactory
+            .delete(member)
+            .where(member.age.gt(18))
+            .execute()
+    }
 }
