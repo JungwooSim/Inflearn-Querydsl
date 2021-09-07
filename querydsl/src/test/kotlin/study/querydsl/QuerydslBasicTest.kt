@@ -14,6 +14,8 @@ import study.querydsl.entity.QMember.member
 import study.querydsl.entity.QTeam.team
 import study.querydsl.entity.Team
 import javax.persistence.EntityManager
+import javax.persistence.EntityManagerFactory
+import javax.persistence.PersistenceUnit
 
 @SpringBootTest
 @Transactional
@@ -21,6 +23,9 @@ class QuerydslBasicTest(
     @Autowired private val em: EntityManager) {
 
     lateinit var queryFactory: JPAQueryFactory
+
+    @PersistenceUnit
+    lateinit var emf: EntityManagerFactory
 
     @BeforeEach
     fun before() {
@@ -314,5 +319,22 @@ class QuerydslBasicTest(
         for (value in result) {
             println("tuple = $value")
         }
+    }
+
+
+
+    @Test
+    fun fetchJoinNo() {
+        em.flush()
+        em.clear()
+
+        val findMember: Member = queryFactory
+            .selectFrom(member)
+            .join(member.team, team).fetchJoin()
+            .where(member.username.eq("member1"))
+            .fetchOne()!!
+
+        val loaded = emf.persistenceUnitUtil.isLoaded(findMember.team)
+        assertThat(loaded).`as`("패치 조인 미적용").isTrue
     }
 }
