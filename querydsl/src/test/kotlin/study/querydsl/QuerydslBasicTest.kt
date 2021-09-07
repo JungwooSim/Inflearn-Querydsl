@@ -2,6 +2,8 @@ package study.querydsl
 
 import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
+import com.querydsl.core.types.ExpressionUtils
+import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.CaseBuilder
 import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.JPAExpressions
@@ -12,6 +14,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
+import study.querydsl.dto.MemberDto
+import study.querydsl.dto.UserDto
 import study.querydsl.entity.Member
 import study.querydsl.entity.QMember
 import study.querydsl.entity.QMember.member
@@ -508,6 +512,96 @@ class QuerydslBasicTest(
             val age = tuple.get(member.age)
             println("username = $username")
             println("age = $age")
+        }
+    }
+
+    @Test
+    fun findDtoByJPQL() {
+        val result: MutableList<MemberDto> = em.createQuery("select new study.querydsl.dto.MemberDto(m.username, m.age) from Member m", MemberDto::class.java).resultList
+
+        for (value in result) {
+            println("memberDto = $value")
+        }
+    }
+
+    /**
+     * Setter 를 이용하여 생성
+     */
+    @Test
+    fun findDtoBySetter() {
+        val result: MutableList<MemberDto> = queryFactory
+            .select(Projections.bean(MemberDto::class.java, member.username, member.age))
+            .from(member)
+            .fetch()
+
+        for (value in result) {
+            println("memberDto = $value")
+        }
+    }
+
+    /**
+     * 이름으로 매칭하여 생성
+     */
+    @Test
+    fun findDtoByField() {
+        val result: MutableList<MemberDto> = queryFactory
+            .select(Projections.fields(MemberDto::class.java, member.username, member.age))
+            .from(member)
+            .fetch()
+
+        for (value in result) {
+            println("memberDto = $value")
+        }
+    }
+
+    /**
+     * 생성자로 생성
+     */
+    @Test
+    fun findDtoByConstructor() {
+        val result: MutableList<MemberDto> = queryFactory
+            .select(Projections.constructor(MemberDto::class.java, member.username, member.age))
+            .from(member)
+            .fetch()
+
+        for (value in result) {
+            println("memberDto = $value")
+        }
+    }
+
+    /**
+     * 별칭사용하여 이름으로 매칭 후 생성
+     */
+    @Test
+    fun findUserDto() {
+        val result: MutableList<UserDto> = queryFactory
+            .select(Projections.fields(UserDto::class.java, member.username.`as`("name"), member.age))
+            .from(member)
+            .fetch()
+
+        for (value in result) {
+            println("UserDto = $value")
+        }
+    }
+
+    /**
+     * 별칭사용하여 이름으로 매칭 후 생성
+     */
+    @Test
+    fun findUserDto2() {
+        val memberSub: QMember = QMember("memberSub")
+
+        val result: MutableList<UserDto> = queryFactory
+            .select(Projections.fields(
+                UserDto::class.java,
+                member.username.`as`("name"),
+                ExpressionUtils.`as`(JPAExpressions.select(memberSub.age.max()).from(memberSub), "age")
+            ))
+            .from(member)
+            .fetch()
+
+        for (value in result) {
+            println("UserDto = $value")
         }
     }
 }
