@@ -5,6 +5,7 @@ import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
 import com.querydsl.core.types.ExpressionUtils
 import com.querydsl.core.types.Projections
+import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.core.types.dsl.CaseBuilder
 import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.JPAExpressions
@@ -622,6 +623,9 @@ class QuerydslBasicTest(
         }
     }
 
+    /**
+     * 동적 쿼리 - BooleanBuilder 사용
+     */
     @Test
     fun dynamicQuery_BooleanBuilder() {
         val usernameParam = "member1"
@@ -648,4 +652,39 @@ class QuerydslBasicTest(
             .where(builder)
             .fetch()
     }
+
+    /**
+     * 동적 쿼리 - Where 다중 파라미터 사용
+     */
+    @Test
+    fun dynamicQuery_WhereParam() {
+        val usernameParam = "member1"
+        val ageParam = null
+
+        val result: MutableList<Member> = this.searchMember2(usernameParam, ageParam)
+
+        assertThat(result.size).isEqualTo(1)
+    }
+
+    private fun searchMember2(usernameParam: String?, ageParam: Int?): MutableList<Member> {
+        return queryFactory
+            .selectFrom(member)
+//            .where(usernameEq(usernameParam), ageEQ(ageParam))
+            .where(allEq(usernameParam, ageParam))
+            .fetch()
+    }
+
+    private fun usernameEq(usernameParam: String?): BooleanExpression? {
+        return if (usernameParam != null) member.username.eq(usernameParam) else null
+    }
+
+    private fun ageEQ(ageParam: Int?): BooleanExpression? {
+        return if (ageParam != null) member.age.eq(ageParam) else null
+    }
+
+    private fun allEq(usernameParam: String?, ageParam: Int?): BooleanExpression? {
+        return usernameEq(usernameParam)?.and(ageEQ(ageParam))
+    }
+
+
 }
