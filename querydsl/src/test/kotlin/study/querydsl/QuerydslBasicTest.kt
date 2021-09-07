@@ -3,6 +3,7 @@ package study.querydsl
 import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
 import com.querydsl.core.types.dsl.CaseBuilder
+import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.assertj.core.api.Assertions.assertThat
@@ -452,6 +453,31 @@ class QuerydslBasicTest(
             )
             .from(member)
             .fetch()
+
+        for (value in result) {
+            println("s = $value")
+        }
+    }
+
+    @Test
+    fun constant() {
+        val result: MutableList<Tuple> = queryFactory
+            .select(member.username, Expressions.constant("A"))
+            .from(member)
+            .fetch();
+
+        for (value in result) {
+            println("s = $value")
+        }
+    }
+
+    @Test
+    fun concat() {
+        val result: MutableList<String> = queryFactory
+            .select(member.username.concat("_").concat(member.age.stringValue()))
+            .from(member)
+            .where(member.username.eq("member1"))
+            .fetch();
 
         for (value in result) {
             println("s = $value")
