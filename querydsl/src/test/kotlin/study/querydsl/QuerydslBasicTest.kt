@@ -483,4 +483,31 @@ class QuerydslBasicTest(
             println("s = $value")
         }
     }
+
+    @Test
+    fun simpleProjection() {
+        val result: MutableList<String> = queryFactory
+            .select(member.username)
+            .from(member)
+            .fetch()
+
+        for (value in result) {
+            println("s = $value")
+        }
+    }
+
+    @Test
+    fun tupleProjection() {
+        val result: MutableList<Tuple> = queryFactory
+            .select(member.username, member.age)
+            .from(member)
+            .fetch()
+
+        for (tuple in result) {
+            val username = tuple.get(member.username)
+            val age = tuple.get(member.age)
+            println("username = $username")
+            println("age = $age")
+        }
+    }
 }
