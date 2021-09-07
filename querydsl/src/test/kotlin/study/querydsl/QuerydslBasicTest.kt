@@ -2,6 +2,7 @@ package study.querydsl
 
 import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
+import com.querydsl.core.types.dsl.CaseBuilder
 import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.assertj.core.api.Assertions.assertThat
@@ -420,6 +421,40 @@ class QuerydslBasicTest(
         for (tuple in result) {
             println("username = " + tuple.get(member.username))
             println("age = " + tuple.get(JPAExpressions.select(memberSub.age.avg()).from(memberSub)))
+        }
+    }
+
+    @Test
+    fun basicCase() {
+        val result: MutableList<String> = queryFactory
+            .select(
+                member.age
+                    .`when`(10).then("열살")
+                    .`when`(20).then("스무살")
+                    .otherwise("기타")
+            )
+            .from(member)
+            .fetch()
+
+        for (value in result) {
+            println("s = $value")
+        }
+    }
+
+    @Test
+    fun complexCase() {
+        val result: MutableList<String> = queryFactory
+            .select(
+                CaseBuilder()
+                    .`when`(member.age.between(0, 20)).then("0~20살")
+                    .`when`(member.age.between(21, 30)).then("21~30살")
+                    .otherwise("기타")
+            )
+            .from(member)
+            .fetch()
+
+        for (value in result) {
+            println("s = $value")
         }
     }
 }
