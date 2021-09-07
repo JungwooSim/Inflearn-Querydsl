@@ -730,4 +730,37 @@ class QuerydslBasicTest(
             .where(member.age.gt(18))
             .execute()
     }
+
+    /**
+     * SQL function 호출
+     */
+    @Test
+    fun sqlFunction() {
+        val result: MutableList<String> = queryFactory
+            .select(
+                Expressions.stringTemplate(
+                    "function('replace', {0}, {1}, {2})",
+                    member.username, "member", "M"
+                )
+            )
+            .from(member)
+            .fetch()
+
+        for (value in result) {
+            println("s = $value")
+        }
+    }
+
+    @Test
+    fun sqlFunction2() {
+        val result: MutableList<String> = queryFactory
+            .select(member.username)
+            .from(member)
+            .where(member.username.eq(member.username.lower()))
+            .fetch()
+
+        for (value in result) {
+            println("s = $value")
+        }
+    }
 }
