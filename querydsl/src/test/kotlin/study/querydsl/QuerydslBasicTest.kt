@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
 import study.querydsl.dto.MemberDto
+import study.querydsl.dto.QMemberDto
 import study.querydsl.dto.UserDto
 import study.querydsl.entity.Member
 import study.querydsl.entity.QMember
@@ -602,6 +603,18 @@ class QuerydslBasicTest(
 
         for (value in result) {
             println("UserDto = $value")
+        }
+    }
+
+    @Test
+    fun findDtoByQueryProjection() {
+        val result: MutableList<MemberDto> = queryFactory
+            .select(QMemberDto(member.username, member.age))
+            .from(member)
+            .fetch()
+
+        for (value in result) {
+            println("MemberDto = $value")
         }
     }
 }
