@@ -2,6 +2,7 @@ package study.querydsl
 
 import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
+import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
 import study.querydsl.entity.Member
+import study.querydsl.entity.QMember
 import study.querydsl.entity.QMember.member
 import study.querydsl.entity.QTeam.team
 import study.querydsl.entity.Team
@@ -321,8 +323,6 @@ class QuerydslBasicTest(
         }
     }
 
-
-
     @Test
     fun fetchJoinNo() {
         em.flush()
@@ -335,6 +335,91 @@ class QuerydslBasicTest(
             .fetchOne()!!
 
         val loaded = emf.persistenceUnitUtil.isLoaded(findMember.team)
-        assertThat(loaded).`as`("패치 조인 미적용").isTrue
+        assertThat(loaded).`as`("패치 조인 적용").isTrue
+    }
+
+    /**
+     * 나이가 가장 많은 회원 조회
+     */
+    @Test
+    fun subQuery() {
+        val memberSub: QMember = QMember("memberSub")
+
+        val result = queryFactory
+            .selectFrom(member)
+            .where(
+                member.age.eq(
+                    JPAExpressions
+                        .select(memberSub.age.max())
+                        .from(memberSub)
+                )
+            )
+            .fetch()
+
+        assertThat(result).extracting("age")
+            .containsExactly(40);
+    }
+
+    /**
+     * 나이가 평균 나이 이상인 회원
+     */
+    @Test
+    fun subQueryGoe() {
+        val memberSub: QMember = QMember("memberSub")
+
+        val result = queryFactory
+            .selectFrom(member)
+            .where(
+                member.age.goe(
+                    JPAExpressions
+                        .select(memberSub.age.avg())
+                        .from(memberSub)
+                )
+            )
+            .fetch()
+
+        assertThat(result).extracting("age")
+            .containsExactly(30, 40);
+    }
+
+    /**
+     * 서브쿼리 여러 건 처리, in 사용
+     */
+    @Test
+    fun subQueryIn() {
+        val memberSub: QMember = QMember("memberSub")
+
+        val result: MutableList<Member> = queryFactory
+            .selectFrom(member)
+            .where(
+                member.age.`in`(
+                    JPAExpressions
+                        .select(memberSub.age)
+                        .from(memberSub)
+                        .where(memberSub.age.gt(10))
+                )
+            )
+            .fetch()
+
+        assertThat(result).extracting("age")
+            .containsExactly(20, 30, 40);
+    }
+
+    /**
+     * 서브쿼리 여러 건 처리, in 사용
+     */
+    @Test
+    fun selectSubQuery() {
+        val memberSub: QMember = QMember("memberSub")
+
+        val result: MutableList<Tuple> = queryFactory
+            .select(member.username, JPAExpressions.select(memberSub.age.avg()).from(memberSub))
+            .from(member)
+            .fetch()
+
+        for (tuple in result) {
+            println("username = " + tuple.get(member.username))
+            println("age = " + tuple.get(JPAExpressions.select(memberSub.age.avg()).from(memberSub)))
+        }
     }
 }
