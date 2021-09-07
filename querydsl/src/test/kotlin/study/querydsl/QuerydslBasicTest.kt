@@ -1,5 +1,6 @@
 package study.querydsl
 
+import com.querydsl.core.BooleanBuilder
 import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
 import com.querydsl.core.types.ExpressionUtils
@@ -606,6 +607,9 @@ class QuerydslBasicTest(
         }
     }
 
+    /**
+     * @QueryProjection 활용
+     */
     @Test
     fun findDtoByQueryProjection() {
         val result: MutableList<MemberDto> = queryFactory
@@ -616,5 +620,32 @@ class QuerydslBasicTest(
         for (value in result) {
             println("MemberDto = $value")
         }
+    }
+
+    @Test
+    fun dynamicQuery_BooleanBuilder() {
+        val usernameParam = "member1"
+        val ageParam = 10
+
+        val result: MutableList<Member> = this.searchMember1(usernameParam, ageParam)
+
+        assertThat(result.size).isEqualTo(1)
+    }
+
+    private fun searchMember1(usernameCond: String, ageCond: Int): MutableList<Member> {
+        val builder: BooleanBuilder = BooleanBuilder()
+
+        if (usernameCond != null) {
+            builder.and(member.username.eq(usernameCond))
+        }
+
+        if (ageCond != null) {
+            builder.and(member.age.eq(ageCond))
+        }
+
+        return queryFactory
+            .selectFrom(member)
+            .where(builder)
+            .fetch()
     }
 }
