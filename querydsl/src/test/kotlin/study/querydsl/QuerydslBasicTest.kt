@@ -3,6 +3,7 @@ package study.querydsl
 import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
 import com.querydsl.jpa.impl.JPAQueryFactory
+import jdk.nashorn.internal.ir.annotations.Ignore
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -239,5 +240,40 @@ class QuerydslBasicTest(
 
         assertThat(teamB.get(team.name)).isEqualTo("teamB");
         assertThat(teamB.get(member.age.avg())).isEqualTo(35.0);
+    }
+
+    /**
+     * 팀A에 소속된 모든 회원
+     */
+    @Test
+    fun join() {
+        val result: MutableList<Member> = queryFactory
+            .selectFrom(member)
+            .join(member.team, team)
+//            .leftJoin(member.team, team)
+            .where(team.name.eq("teamA"))
+            .fetch()
+
+        assertThat(result)
+            .extracting("username")
+            .containsExactly("member1", "member2");
+    }
+
+    @Ignore // error 발생중
+    @Test
+    fun theta_join() {
+        em.persist(Member(username = "teamA"))
+        em.persist(Member(username = "teatB"))
+        em.persist(Member(username = "teatC"))
+
+        val result: MutableList<Member> = queryFactory
+            .select(member)
+            .from(member, team)
+            .where(member.username.eq(team.name))
+            .fetch()
+
+        assertThat(result)
+            .extracting("username")
+            .containsExactly("teamA", "teamB");
     }
 }
