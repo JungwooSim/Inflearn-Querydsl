@@ -1,6 +1,7 @@
 package study.querydsl
 
 import com.querydsl.core.QueryResults
+import com.querydsl.core.Tuple
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -10,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
 import study.querydsl.entity.Member
 import study.querydsl.entity.QMember.member
+import study.querydsl.entity.QTeam.team
 import study.querydsl.entity.Team
 import javax.persistence.EntityManager
 
@@ -185,5 +187,57 @@ class QuerydslBasicTest(
         assertThat(result.limit).isEqualTo(2)
         assertThat(result.offset).isEqualTo(1)
         assertThat(result.results.size).isEqualTo(2)
+    }
+
+    /**
+     * JPQL
+     * select
+     * COUNT(m), //회원수
+     * SUM(m.age), //나이 합
+     * AVG(m.age), //평균 나이
+     * MAX(m.age), //최대 나이
+     * MIN(m.age) //최소 나이 * from Member m
+     */
+    @Test
+    fun aggregation() {
+        val result: MutableList<Tuple> = queryFactory
+            .select(
+                member.count(),
+                member.age.sum(),
+                member.age.avg(),
+                member.age.max(),
+                member.age.min()
+            )
+            .from(member)
+            .fetch();
+
+        val tuple = result[0]
+        assertThat(tuple.get(member.count())).isEqualTo(4);
+        assertThat(tuple.get(member.age.sum())).isEqualTo(100);
+        assertThat(tuple.get(member.age.avg())).isEqualTo(25.0);
+        assertThat(tuple.get(member.age.max())).isEqualTo(40);
+        assertThat(tuple.get(member.age.min())).isEqualTo(10);
+    }
+
+    /**
+     * 팀의 이름과 각 팀의 평균 연령을 구해라.
+     */
+    @Test
+    fun group() {
+        val result: MutableList<Tuple> = queryFactory
+            .select(team.name, member.age.avg())
+            .from(member)
+            .join(member.team, team)
+            .groupBy(team.name)
+            .fetch()
+
+        val teamA: Tuple = result[0]
+        val teamB: Tuple = result[1]
+
+        assertThat(teamA.get(team.name)).isEqualTo("teamA");
+        assertThat(teamA.get(member.age.avg())).isEqualTo(15.0);
+
+        assertThat(teamB.get(team.name)).isEqualTo("teamB");
+        assertThat(teamB.get(member.age.avg())).isEqualTo(35.0);
     }
 }
