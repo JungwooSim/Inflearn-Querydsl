@@ -85,7 +85,7 @@ class MemberJpaRepository(val em: EntityManager) {
             .fetch()
     }
 
-    fun search(condition: MemberSearchCondition): MutableList<MemberTeamDto> {
+    fun search(condition: MemberSearchCondition?): MutableList<MemberTeamDto> {
         return queryFactory
             .select(
                 Projections.constructor(MemberTeamDto::class.java,
@@ -99,10 +99,10 @@ class MemberJpaRepository(val em: EntityManager) {
             .from(member)
             .leftJoin(member.team, team)
             .where(
-                usernameEq(condition.username),
-                ageLoe(condition.ageLoe),
-                ageGoe(condition.ageGoe),
-                teamNameEq(condition.teamName),
+                usernameEq(condition?.username),
+                ageLoe(condition?.ageLoe),
+                ageGoe(condition?.ageGoe),
+                teamNameEq(condition?.teamName),
             )
             .fetch()
     }
@@ -115,11 +115,11 @@ class MemberJpaRepository(val em: EntityManager) {
         return if(hasText(teamName)) team.name.eq(teamName) else null
     }
 
-    fun ageGoe(ageGoe: Int?): BooleanExpression {
-        return member.age.goe(ageGoe)
+    fun ageGoe(ageGoe: Int?): BooleanExpression? {
+        return if(ageGoe != null) member.age.goe(ageGoe) else null
     }
 
     fun ageLoe(ageLoe: Int?): BooleanExpression? {
-        return member.age.loe(ageLoe)
+        return if(ageLoe != null) member.age.loe(ageLoe) else null
     }
 }
