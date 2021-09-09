@@ -51,7 +51,8 @@ class MemberJpaRepositoryTest(
 
         val condition: MemberSearchCondition = MemberSearchCondition(ageGoe = 35, ageLoe = 40, teamName = "teamB")
 
-        val result: MutableList<MemberTeamDto> = memberJpaRepository.searchByBuilder(condition)
+//        val result: MutableList<MemberTeamDto> = memberJpaRepository.searchByBuilder(condition)
+        val result: MutableList<MemberTeamDto> = memberJpaRepository.search(condition)
 
         assertThat(result).extracting("username").containsExactly("member4")
     }

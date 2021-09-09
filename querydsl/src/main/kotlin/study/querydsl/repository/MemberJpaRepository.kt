@@ -2,6 +2,7 @@ package study.querydsl.repository
 
 import com.querydsl.core.BooleanBuilder
 import com.querydsl.core.types.Projections
+import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.springframework.stereotype.Repository
 import org.springframework.util.StringUtils.hasText
@@ -82,5 +83,43 @@ class MemberJpaRepository(val em: EntityManager) {
             .leftJoin(member.team, team)
             .where(builder)
             .fetch()
+    }
+
+    fun search(condition: MemberSearchCondition): MutableList<MemberTeamDto> {
+        return queryFactory
+            .select(
+                Projections.constructor(MemberTeamDto::class.java,
+                    member.id.`as`("memberId"),
+                    member.username,
+                    member.age,
+                    team.id.`as`("teamId"),
+                    team.name.`as`("teamName"),
+                )
+            )
+            .from(member)
+            .leftJoin(member.team, team)
+            .where(
+                usernameEq(condition.username),
+                ageLoe(condition.ageLoe),
+                ageGoe(condition.ageGoe),
+                teamNameEq(condition.teamName),
+            )
+            .fetch()
+    }
+
+    fun usernameEq(username: String?): BooleanExpression? {
+        return if (hasText(username)) member.username.eq(username) else null
+    }
+
+    fun teamNameEq(teamName: String?): BooleanExpression? {
+        return if(hasText(teamName)) team.name.eq(teamName) else null
+    }
+
+    fun ageGoe(ageGoe: Int?): BooleanExpression {
+        return member.age.goe(ageGoe)
+    }
+
+    fun ageLoe(ageLoe: Int?): BooleanExpression? {
+        return member.age.loe(ageLoe)
     }
 }
