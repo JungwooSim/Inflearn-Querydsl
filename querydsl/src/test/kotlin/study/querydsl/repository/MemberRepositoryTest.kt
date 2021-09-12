@@ -5,7 +5,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
+import study.querydsl.dto.MemberSearchCondition
+import study.querydsl.dto.MemberTeamDto
 import study.querydsl.entity.Member
+import study.querydsl.entity.Team
 import javax.persistence.EntityManager
 
 @SpringBootTest
@@ -13,6 +16,7 @@ import javax.persistence.EntityManager
 class MemberRepositoryTest(
     @Autowired private val em: EntityManager,
     @Autowired private val memberRepository: MemberRepository) {
+
     @Test
     fun basicTest() {
         val member = Member(username = "member1", age = 10)
@@ -26,5 +30,29 @@ class MemberRepositoryTest(
 
         val result2 = memberRepository.findByUsername("member1")
         Assertions.assertThat(result2).containsExactly(member)
+    }
+
+    @Test
+    fun searchTest() {
+        val teamA = Team(name = "teamA")
+        val teamB = Team(name = "teamB")
+        em.persist(teamA)
+        em.persist(teamB)
+
+        val member1: Member = Member(username = "member1", age = 10, team = teamA)
+        val member2: Member = Member(username = "member2", age = 20, team = teamA)
+        val member3: Member = Member(username = "member3", age = 30, team = teamB)
+        val member4: Member = Member(username = "member4", age = 40, team = teamB)
+
+        em.persist(member1)
+        em.persist(member2)
+        em.persist(member3)
+        em.persist(member4)
+
+        val condition: MemberSearchCondition = MemberSearchCondition(ageGoe = 35, ageLoe = 40, teamName = "teamB")
+
+        val result: MutableList<MemberTeamDto> = memberRepository.search(condition)
+
+        Assertions.assertThat(result).extracting("username").containsExactly("member4")
     }
 }
