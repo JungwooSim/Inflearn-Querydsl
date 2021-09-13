@@ -1,9 +1,13 @@
 package study.querydsl.repository
 
+import com.querydsl.core.QueryResults
 import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import org.springframework.util.StringUtils
 import study.querydsl.dto.MemberSearchCondition
 import study.querydsl.dto.MemberTeamDto
@@ -34,6 +38,81 @@ class MemberRepositoryCustomImpl(@Autowired private val em: EntityManager,) : Me
                 teamNameEq(condition?.teamName),
             )
             .fetch()
+    }
+
+    override fun searchPageSimple(
+        condition: MemberSearchCondition,
+        pageable: Pageable
+    ): Page<MemberTeamDto> {
+        val results: QueryResults<MemberTeamDto> = queryFactory
+            .select(
+                Projections.constructor(
+                    MemberTeamDto::class.java,
+                    QMember.member.id.`as`("memberId"),
+                    QMember.member.username,
+                    QMember.member.age,
+                    QTeam.team.id.`as`("teamId"),
+                    QTeam.team.name.`as`("teamName"),
+                )
+            )
+            .from(QMember.member)
+            .leftJoin(QMember.member.team, QTeam.team)
+            .where(
+                usernameEq(condition?.username),
+                ageLoe(condition?.ageLoe),
+                ageGoe(condition?.ageGoe),
+                teamNameEq(condition?.teamName),
+            )
+            .offset(pageable.offset)
+            .limit(pageable.pageSize.toLong())
+            .fetchResults()
+
+        val content: MutableList<MemberTeamDto> = results.results
+        val total: Long = results.total
+
+        return PageImpl(content, pageable, total)
+    }
+
+    override fun searchPageComplex(
+        condition: MemberSearchCondition,
+        pageable: Pageable
+    ): Page<MemberTeamDto> {
+        val content: MutableList<MemberTeamDto> = queryFactory
+            .select(
+                Projections.constructor(
+                    MemberTeamDto::class.java,
+                    QMember.member.id.`as`("memberId"),
+                    QMember.member.username,
+                    QMember.member.age,
+                    QTeam.team.id.`as`("teamId"),
+                    QTeam.team.name.`as`("teamName"),
+                )
+            )
+            .from(QMember.member)
+            .leftJoin(QMember.member.team, QTeam.team)
+            .where(
+                usernameEq(condition?.username),
+                ageLoe(condition?.ageLoe),
+                ageGoe(condition?.ageGoe),
+                teamNameEq(condition?.teamName),
+            )
+            .offset(pageable.offset)
+            .limit(pageable.pageSize.toLong())
+            .fetch()
+
+        val total: Long = queryFactory
+            .select(QMember.member)
+            .from(QMember.member)
+            .leftJoin(QMember.member.team, QTeam.team)
+            .where(
+                usernameEq(condition?.username),
+                ageLoe(condition?.ageLoe),
+                ageGoe(condition?.ageGoe),
+                teamNameEq(condition?.teamName),
+            )
+            .fetchCount()
+
+        return PageImpl(content, pageable, total)
     }
 
     private fun usernameEq(username: String?): BooleanExpression? {
