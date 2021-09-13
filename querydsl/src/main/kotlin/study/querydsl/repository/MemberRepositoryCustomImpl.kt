@@ -3,14 +3,17 @@ package study.querydsl.repository
 import com.querydsl.core.QueryResults
 import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.BooleanExpression
+import com.querydsl.jpa.impl.JPAQuery
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import org.springframework.data.support.PageableExecutionUtils
 import org.springframework.util.StringUtils
 import study.querydsl.dto.MemberSearchCondition
 import study.querydsl.dto.MemberTeamDto
+import study.querydsl.entity.Member
 import study.querydsl.entity.QMember
 import study.querydsl.entity.QTeam
 import javax.persistence.EntityManager
@@ -100,7 +103,7 @@ class MemberRepositoryCustomImpl(@Autowired private val em: EntityManager,) : Me
             .limit(pageable.pageSize.toLong())
             .fetch()
 
-        val total: Long = queryFactory
+        val countQuery: JPAQuery<Member> = queryFactory
             .select(QMember.member)
             .from(QMember.member)
             .leftJoin(QMember.member.team, QTeam.team)
@@ -110,9 +113,7 @@ class MemberRepositoryCustomImpl(@Autowired private val em: EntityManager,) : Me
                 ageGoe(condition?.ageGoe),
                 teamNameEq(condition?.teamName),
             )
-            .fetchCount()
-
-        return PageImpl(content, pageable, total)
+        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchCount)
     }
 
     private fun usernameEq(username: String?): BooleanExpression? {
