@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional
 import study.querydsl.dto.MemberSearchCondition
 import study.querydsl.dto.MemberTeamDto
 import study.querydsl.entity.Member
+import study.querydsl.entity.QMember
 import study.querydsl.entity.Team
 import javax.persistence.EntityManager
 
@@ -82,5 +83,31 @@ class MemberRepositoryTest(
 
         Assertions.assertThat(result.size).isEqualTo(3)
         Assertions.assertThat(result.content).extracting("username").containsExactly("member1", "member2", "member3")
+    }
+
+    @Test
+    fun querydslPredicateExecutorTest() {
+        val teamA = Team(name = "teamA")
+        val teamB = Team(name = "teamB")
+        em.persist(teamA)
+        em.persist(teamB)
+
+        val member1: Member = Member(username = "member1", age = 10, team = teamA)
+        val member2: Member = Member(username = "member2", age = 20, team = teamA)
+        val member3: Member = Member(username = "member3", age = 30, team = teamB)
+        val member4: Member = Member(username = "member4", age = 40, team = teamB)
+
+        em.persist(member1)
+        em.persist(member2)
+        em.persist(member3)
+        em.persist(member4)
+
+        val member = QMember.member
+
+        val result: Iterable<Member> = memberRepository.findAll(member.age.between(10, 40).and(member.username.eq("member1")))
+
+        for (findMember in result) {
+            println("member1 = $findMember")
+        }
     }
 }
